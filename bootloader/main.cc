@@ -1,5 +1,6 @@
 #include <libuefi.hh>
 #include <libuefi/ext/string.hh>
+#include <libuefi/ext/gfx.hh>
 #include <libuefi/protocol/device_path.hh>
 
 bool LoadDriver(const char* path)
@@ -33,13 +34,6 @@ bool LoadDriver(const char* path)
     return true;
 }
 
-decltype(uefi::RuntimeServices::get_variable) oGetVariable = nullptr;
-uefi::Status GetVariableHook(const uefi::Char16* variable_name, uefi::Guid* vendor_guid, u32* attributes, u64* data_size, void* data)
-{
-    uefi::PrintString8("GetVariableHook called!\r\n");
-    return oGetVariable(variable_name, vendor_guid, attributes, data_size, data);
-}
-
 uefi::Status UefiMain(const uefi::Handle imageHandle, uefi::SystemTable* systemTable)
 {
     uefi::Initialize(imageHandle, systemTable);
@@ -48,7 +42,36 @@ uefi::Status UefiMain(const uefi::Handle imageHandle, uefi::SystemTable* systemT
         uefi::PrintString8("Failed to initialize\r\n");
         return 1;
     }
-    uefi::PrintString8("Hello World!\r\n");
+    if (!uefi::InitializeGraphics())
+    {
+        uefi::PrintString8("Failed to initialize graphics\r\n");
+        return 1;
+    }
+
+    uefi::ClearScreen(uefi::Color(2, 0, 1, 0));
+
+    uefi::GOPFImage* font = nullptr;
+    uefi::ReadFile("EFI\\2B\\FONT.GOPF", reinterpret_cast<void**>(&font), nullptr);
+    if (font)
+    {
+        uefi::SetFont(font);
+    }
+
+    uefi::GOPBImage* logo = nullptr;
+    uefi::ReadFile("EFI\\2B\\LOGO.GOPB", reinterpret_cast<void**>(&logo), nullptr);
+    if (logo)
+    {
+        uefi::BlitText("What's reality? I don't know. When my bird was looking at my computer monitor I thought,\r\n"
+            "\"That bird has no idea what he's looking at.\" And yet what does the bird do? Does he panic? \r\n"
+            "No, he can't really panic, he just does the best he can. Is he able to live in a world where he's so ignorant?\r\n"
+            "Well, he doesn't really have a choice. The bird is okay even though he doesn't understand the world.\r\n"
+            "You're that bird looking at the monitor, and you're thinking to yourself, 'I can figure this out.'\r\n"
+            "Maybe you have some bird ideas. Maybe that's the best you can do.\r\n", 250, 400);
+        uefi::SetBootLogo(logo);
+        uefi::gSystemTable->boot_services->free_pool(logo);
+    }
+
+    uefi::PrintString8("Loading driver...\r\n");
 
     if (!LoadDriver("EFI\\2B\\runtime-driver.efi"))
     {

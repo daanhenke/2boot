@@ -1,3 +1,4 @@
+#include <libcommon/primitives.hh>
 #include <libuefi/ext/string.hh>
 
 #include <libuefi/globals.hh>
@@ -187,6 +188,13 @@ namespace uefi
                 PadAndWrite(s, n, width, padch);
             } break;
 
+            case 'S': {
+                const Char16* s = va_arg(ap, const Char16*);
+                if (!s) s = L"(null)";
+                auto n = String16Length(s);
+                PrintString16(s);
+            } break;
+
             case 'c': {
                 int c = va_arg(ap, int);
                 char ch = static_cast<char>(c);
@@ -198,7 +206,7 @@ namespace uefi
                 int64_t v;
                 if (len == LEN_LL) v = va_arg(ap, long long);
                 else if (len == LEN_L) v = va_arg(ap, long);
-                else if (len == LEN_Z) v = va_arg(ap, ptrdiff_t);
+                else if (len == LEN_Z) v = va_arg(ap, intptr_t);
                 else v = va_arg(ap, int);
 
                 // If padding with zeros, keep '-' in front (common behavior)

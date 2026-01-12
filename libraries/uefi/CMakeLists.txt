@@ -2,6 +2,7 @@ add_library(libuefi STATIC
   src/globals.cc
   src/string.cc
   src/fs.cc
+  src/gfx.cc
 )
 
 target_include_directories(libuefi PUBLIC include)
