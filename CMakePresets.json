@@ -1,0 +1,22 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "hidden": true,
+      "name": "base",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "installDir": "${sourceDir}/out/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+      }
+    },
+    {
+      "name": "uefi",
+      "inherits": [ "base" ],
+      "toolchainFile": "${sourceDir}/cmake/toolchains/x86_64-uefi.cmake",
+      "cacheVariables": {
+        "TWOBOOT_TOOLCHAIN": "uefi"
+      }
+    }
+  ]
+}
